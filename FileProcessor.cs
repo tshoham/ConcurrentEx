@@ -9,17 +9,17 @@ namespace ConcurrentEx
 {
     class FileProcessor : IFileProcessor
     {
-        private static readonly List<string> IGNORE_WORDS = new List<string> { "the", "and", "she", "you", "have", "has", "does", "are", "for", "this", "was", "were", "on", "in", "had", "that", "they" ,"his","with","their","not","been","them", "all","which","from","out","there","but", "him", "other", "did", "into", "than", "every", "any", "what", "her", "never", "after", "very", "about", "even" , "our", "no", "of", "is", "we", "do", "to", "it", "he", ""};
+        private static readonly List<string> IGNORE_WORDS = new() { "the", "and", "she", "you", "have", "has", "does", "are", "for", "this", "was", "were", "on", "in", "had", "that", "they" ,"his","with","their","not","been","them", "all","which","from","out","there","but", "him", "other", "did", "into", "than", "every", "any", "what", "her", "never", "after", "very", "about", "even" , "our", "no", "of", "is", "we", "do", "to", "it", "he", ""};
         public static ConcurrentQueue<string> _lineQueue;
         public static ConcurrentDictionary<string, int> _wordCountDic;
 
-        public FileProcessor(ConcurrentQueue<string> lineQueue)
+        public FileProcessor(ConcurrentQueue<string> lineQueue, ConcurrentDictionary<string, int> concurrentDic)
         {
             _lineQueue = lineQueue;
-            _wordCountDic = new ConcurrentDictionary<string, int>();
+            _wordCountDic = concurrentDic;
         }
 
-        public static string GetLineFromQueue()
+        private static string GetLineFromQueue()
         {
             string currLine;
             if (_lineQueue.TryDequeue(out currLine))
@@ -40,7 +40,7 @@ namespace ConcurrentEx
         {
             char[] delimiterChars = { ' ', ',', '.', ':', '\t' };
 
-            return line.Split(/*delimeters*/delimiterChars).ToList(); //this is NOT good enough!!            
+            return line.Split(/*delimeters*/delimiterChars).ToList(); //TODO: this is NOT good enough!!   Need to remove all puntuation from the words after the split.         
         }
     }
 }

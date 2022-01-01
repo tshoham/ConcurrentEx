@@ -10,7 +10,8 @@ namespace ConcurrentEx
 {
     class FileReader : IFileReader
     {
-        public static ConcurrentQueue<string> _lineQueue;
+        private static ConcurrentQueue<string> _lineQueue;
+        
 
         public FileReader(ConcurrentQueue<string> sentenceQueue)
         {
@@ -27,4 +28,5 @@ namespace ConcurrentEx
                 _lineQueue.Enqueue(line);
             }
         }
+    }
 }
