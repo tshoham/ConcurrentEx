@@ -8,11 +8,10 @@ using System.Threading.Tasks;
 
 namespace ConcurrentEx
 {
-    class FileReader : IFileReader
+    public class FileReader : IFileReader
     {
-        private static ConcurrentQueue<string> _lineQueue;
+        private ConcurrentQueue<string> _lineQueue;
         
-
         public FileReader(ConcurrentQueue<string> sentenceQueue)
         {
             _lineQueue = sentenceQueue;
@@ -27,6 +26,9 @@ namespace ConcurrentEx
             {
                 _lineQueue.Enqueue(line);
             }
+            //todo: add some return value to mark done, so that in the processing threads- we create a loop based onthis. its not enough to check if the queeue is empty- becaseu it may be empty when more threads have been dequed than queued- which doesnt mean the file has been read completely.
+            //on the other hand can add in the processor some loop that keeps checking if can dequed- and not check only once
+
         }
     }
 }

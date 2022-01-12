@@ -14,7 +14,7 @@ namespace ConcurrentEx
         private static ConcurrentQueue<string> _lineQueue;
         private static ConcurrentDictionary<string, int> _wordCountDic;
         private IFileReader _reader;
-        private IFileProcessor _processor;
+        private IProcessor _processor;
 
         public PuppetMaster()
         {
@@ -31,6 +31,9 @@ namespace ConcurrentEx
 
             //todo: need to create some 
             var tasks = Enumerable.Repeat(_processor.ProcessLine(), NUM_THREADS - 1).ToArray();
+
+            await Task.WhenAll(t1);
+
         }
     }
 }

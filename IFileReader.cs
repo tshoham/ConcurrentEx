@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ConcurrentEx
 {
-    interface IFileReader
+    public interface IFileReader
     {
         Task ReadFile(string path);
     }

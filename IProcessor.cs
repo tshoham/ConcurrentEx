@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace ConcurrentEx
 {
-    interface IFileProcessor
+    public interface IProcessor
     {
-        Task ProcessLine();
+        Task Start();
+
+        void Stop();
     }
 }
