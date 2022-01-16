@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,38 +10,48 @@ namespace ConcurrentEx
 {
     public class FileProcessor : Processor
     {
-        private static readonly List<string> IGNORE_WORDS = new() { "the", "and", "she", "you", "have", "has", "does", "are", "for", "this", "was", "were", "on", "in", "had", "that", "they" ,"his","with","their","not","been","them", "all","which","from","out","there","but", "him", "other", "did", "into", "than", "every", "any", "what", "her", "never", "after", "very", "about", "even" , "our", "no", "of", "is", "we", "do", "to", "it", "he", ""};
-        public ConcurrentQueue<string> _lineQueue;
+        private static readonly List<string> IGNORE_WORDS = new() { "", "the", "and", "she", "you", "have", "has", "does", "are", "for", "this", "was", "were", "on", "in", "had", "that", "they" ,"his","with","their","not","been","them", "all","which","from","out","there","but", "him", "other", "did", "into", "than", "every", "any", "what", "her", "never", "after", "very", "about", "even" , "our", "no", "of", "is", "we", "do", "to", "it", "he", ""};
+        public ConcurrentQueue<string> _sentenceQueue;
         public ConcurrentDictionary<string, int> _wordCountDic;
+        public bool _stillReadingFile;
 
-        public FileProcessor(ConcurrentQueue<string> lineQueue, ConcurrentDictionary<string, int> concurrentDic)
+        public FileProcessor(ConcurrentQueue<string> sentenceQueue, ConcurrentDictionary<string, int> wordCountDic)
         {
-            _lineQueue = lineQueue;
-            _wordCountDic = concurrentDic;
+            _sentenceQueue = sentenceQueue;
+            _wordCountDic = wordCountDic;
+            _stillReadingFile = true;
         }
 
-        private string GetLineFromQueue()
+        private async Task<string> GetSentenceFromQueue()
         {
+            //add some retry policy for dequing s so that is will only come back empty when the file is all read
             string currLine;
-            if (_lineQueue.TryDequeue(out currLine))
+            while (_sentenceQueue.TryDequeue(out currLine) == true|| _isRunning)
             {
-                return currLine;
+                if (currLine is not null)
+                {
+                    return currLine;
+                }
             }
-            else return null;
+
+            return null;
         }
 
         protected override async Task StartProcessing()
         {
-            var splitLine = SplitLine(GetLineFromQueue());
-            var cleanLine = splitLine.Where(word => !IGNORE_WORDS.Contains(word)).ToList();
-            cleanLine.ForEach(word => _wordCountDic.AddOrUpdate(word, 1, (key, oldValue) => oldValue + 1));
+            string sentence;
+            while ((sentence = await GetSentenceFromQueue()) is not null)
+            {
+                var splitSentence = SplitSentence(sentence);
+                var cleanSentence = splitSentence.Where(word => !IGNORE_WORDS.Contains(word)).ToList();
+                cleanSentence.ForEach(word => _wordCountDic.AddOrUpdate(word, 1, (key, oldValue) => oldValue + 1));
+            }           
         }
 
-        private List<string> SplitLine(string line)
+        private List<string> SplitSentence(string sentence)
         {
-            char[] delimiterChars = { ' ', ',', '.', ':', '\t' };
-
-            return line.Split(/*delimeters*/delimiterChars).ToList(); //TODO: this is NOT good enough!!   Need to remove all puntuation from the words after the split.         
+            var punctuation = sentence.Where(Char.IsPunctuation).Distinct().ToArray();
+            return sentence.Split().Select(x => x.Trim(punctuation)).ToList();
         }
     }
 }

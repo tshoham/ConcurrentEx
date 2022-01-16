@@ -5,35 +5,47 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace ConcurrentEx
 {
-    class PuppetMaster
+    public class PuppetMaster : Processor
     {
         private const int NUM_THREADS = 5;
-        private static ConcurrentQueue<string> _lineQueue;
-        private static ConcurrentDictionary<string, int> _wordCountDic;
-        private IFileReader _reader;
-        private IProcessor _processor;
+        private ConcurrentQueue<string> _sentenceQueue;
+        private ConcurrentDictionary<string, int> _wordCountDictionary;
+        private string _pathToFile;
 
-        public PuppetMaster()
+        public PuppetMaster(string pathToFile)
         {
-            _lineQueue = new ConcurrentQueue<string>();
-            _wordCountDic = new ConcurrentDictionary<string, int>();
-
-            _reader = new FileReader(_lineQueue);
-            _processor = new FileProcessor(_lineQueue, _wordCountDic);
+            _sentenceQueue = new ConcurrentQueue<string>();
+            _wordCountDictionary = new ConcurrentDictionary<string, int>();
+            _pathToFile = pathToFile;
         }
 
-        public async Task ReadAndProcessFile (string pathToFile)
+        protected override async Task StartProcessing()
         {
-            var t1 = _reader.ReadFile(pathToFile);
+            List<Processor> processors = new List<Processor>();
+            List<Task> runningProcessors = new List<Task>();
 
-            //todo: need to create some 
-            var tasks = Enumerable.Repeat(_processor.ProcessLine(), NUM_THREADS - 1).ToArray();
+            processors.Add(new FileReader(_sentenceQueue, _pathToFile));
+            runningProcessors.Add(processors[0].Start());
 
-            await Task.WhenAll(t1);
+            for (int i = 0; i < NUM_THREADS; ++i)
+            {
+                processors.Add(new FileProcessor(_sentenceQueue, _wordCountDictionary));
+                runningProcessors.Add(processors[i+1].Start());
+            }
+            await Task.WhenAny(runningProcessors);
 
+            if (runningProcessors[0].IsCompleted)
+            {
+                processors.ForEach(processor => processor.Stop());
+            }
+
+            await Task.WhenAll(runningProcessors);
+
+            Console.WriteLine(JsonConvert.SerializeObject(_wordCountDictionary));
         }
     }
 }

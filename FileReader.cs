@@ -8,27 +8,29 @@ using System.Threading.Tasks;
 
 namespace ConcurrentEx
 {
-    public class FileReader : IFileReader
+    public class FileReader : Processor
     {
-        private ConcurrentQueue<string> _lineQueue;
-        
-        public FileReader(ConcurrentQueue<string> sentenceQueue)
+        private ConcurrentQueue<string> _sentenceQueue;
+        private string _pathToFile;
+
+
+        public FileReader(ConcurrentQueue<string> sentenceQueue, string pathToFile)
         {
-            _lineQueue = sentenceQueue;
+            _sentenceQueue = sentenceQueue;
+            _pathToFile = pathToFile;
         }
 
-        public async Task ReadFile(string path)
+        protected override async Task StartProcessing()
         {
-            using StreamReader reader = File.OpenText(path);
+            using StreamReader reader = File.OpenText(_pathToFile);
             string line;
 
             while ((line = await reader.ReadLineAsync()) is not null)
             {
-                _lineQueue.Enqueue(line);
+                _sentenceQueue.Enqueue(line);
             }
-            //todo: add some return value to mark done, so that in the processing threads- we create a loop based onthis. its not enough to check if the queeue is empty- becaseu it may be empty when more threads have been dequed than queued- which doesnt mean the file has been read completely.
-            //on the other hand can add in the processor some loop that keeps checking if can dequed- and not check only once
 
+            Console.WriteLine("DONE reading file");
         }
     }
 }

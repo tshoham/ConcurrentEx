@@ -1,15 +1,14 @@
 ﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ConcurrentEx
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            await new PuppetMaster("C:/Users/talshoham/source/repos/ConcurrentEx/AnimalFarm.txt").Start();
         }
-
-        //i want to read the book by lines
-        //i want the processor to take lines and create a concurrentdictionary
     }
 }
