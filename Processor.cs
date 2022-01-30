@@ -22,7 +22,6 @@ namespace ConcurrentEx
         {
             if (!_isRunning)
             {
-                Console.WriteLine($"Starting Process {_processId}.....");
                 _isRunning = true;
                 return Task.Run(() => StartProcessing());
             }

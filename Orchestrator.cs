@@ -9,16 +9,16 @@ using Newtonsoft.Json;
 
 namespace ConcurrentEx
 {
-    public class PuppetMaster : Processor
+    public class Orchestrator : Processor
     {
         private const int NUM_THREADS = 5;
-        private ConcurrentQueue<string> _sentenceQueue;
+        private BlockingCollection<string> _sentenceQueue;
         private ConcurrentDictionary<string, int> _wordCountDictionary;
         private string _pathToFile;
 
-        public PuppetMaster(string pathToFile)
+        public Orchestrator(string pathToFile)
         {
-            _sentenceQueue = new ConcurrentQueue<string>();
+            _sentenceQueue = new BlockingCollection<string>();
             _wordCountDictionary = new ConcurrentDictionary<string, int>();
             _pathToFile = pathToFile;
         }
@@ -36,13 +36,6 @@ namespace ConcurrentEx
                 processors.Add(new FileProcessor(_sentenceQueue, _wordCountDictionary));
                 runningProcessors.Add(processors[i+1].Start());
             }
-            await Task.WhenAny(runningProcessors);
-
-            if (runningProcessors[0].IsCompleted)
-            {
-                processors.ForEach(processor => processor.Stop());
-            }
-
             await Task.WhenAll(runningProcessors);
 
             Console.WriteLine(JsonConvert.SerializeObject(_wordCountDictionary));
