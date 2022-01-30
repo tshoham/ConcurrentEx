@@ -8,7 +8,7 @@ namespace ConcurrentEx
     {
         static async Task Main(string[] args)
         {
-            await new PuppetMaster("C:/Users/talshoham/source/repos/ConcurrentEx/AnimalFarm.txt").Start();
+            await new Orchestrator("./AnimalFarm.txt").Start();
         }
     }
 }

@@ -10,11 +10,11 @@ namespace ConcurrentEx
 {
     public class FileReader : Processor
     {
-        private ConcurrentQueue<string> _sentenceQueue;
+        private BlockingCollection<string> _sentenceQueue;
         private string _pathToFile;
 
 
-        public FileReader(ConcurrentQueue<string> sentenceQueue, string pathToFile)
+        public FileReader(BlockingCollection<string> sentenceQueue, string pathToFile)
         {
             _sentenceQueue = sentenceQueue;
             _pathToFile = pathToFile;
@@ -27,8 +27,10 @@ namespace ConcurrentEx
 
             while ((line = await reader.ReadLineAsync()) is not null)
             {
-                _sentenceQueue.Enqueue(line);
+                _sentenceQueue.Add(line);
             }
+
+            _sentenceQueue.CompleteAdding();
 
             Console.WriteLine("DONE reading file");
         }
